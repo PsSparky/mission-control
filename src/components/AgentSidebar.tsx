@@ -40,6 +40,8 @@ export function AgentSidebar({ agents }: { agents: Agent[] }) {
 
   const getRoleBadge = (type: string) => {
     switch (type) {
+      case "lead":
+        return { label: "LEAD", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" };
       case "coordinator":
         return { label: "COORD", color: "bg-violet-500/10 text-violet-400 border-violet-500/20" };
       case "developer":

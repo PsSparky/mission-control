@@ -53,21 +53,7 @@ export function MissionQueue({ tasks }: { tasks: Task[] }) {
             </div>
           </div>
 
-          {/* Filter Pills */}
-          <div className="flex gap-2">
-            {COLUMNS.map((col) => {
-              const count = counts[col.id as keyof typeof counts];
-              return (
-                <button
-                  key={col.id}
-                  className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 rounded-lg transition-colors"
-                >
-                  <span className="text-xs font-medium text-zinc-300">{col.name}</span>
-                  <span className="ml-2 text-xs font-bold text-zinc-500">{count}</span>
-                </button>
-              );
-            })}
-          </div>
+          {/* Filter pills removed — column headers below are enough */}
         </div>
 
         {/* Kanban Columns */}

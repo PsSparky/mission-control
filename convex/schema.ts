@@ -16,6 +16,7 @@ export default defineSchema({
     name: v.string(),
     role: v.string(),
     agentType: v.optional(v.union(
+      v.literal("lead"),
       v.literal("coordinator"),
       v.literal("developer"),
       v.literal("qa")

@@ -6,7 +6,7 @@ interface Agent {
   _id: Id<"agents">;
   name: string;
   role: string;
-  agentType?: "coordinator" | "developer" | "qa";
+  agentType?: "lead" | "coordinator" | "developer" | "qa";
   emoji?: string;
   status: "online" | "idle" | "working" | "offline";
   currentTask?: string;

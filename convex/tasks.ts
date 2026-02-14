@@ -6,10 +6,11 @@ export const list = query({
   args: {
     status: v.optional(
       v.union(
-        v.literal("queued"),
+        v.literal("inbox"),
+        v.literal("assigned"),
         v.literal("in_progress"),
-        v.literal("completed"),
-        v.literal("failed")
+        v.literal("review"),
+        v.literal("done")
       )
     ),
     projectId: v.optional(v.id("projects")),
@@ -55,10 +56,11 @@ export const stats = query({
     const tasks = await ctx.db.query("tasks").collect();
     return {
       total: tasks.length,
-      queued: tasks.filter((t) => t.status === "queued").length,
+      inbox: tasks.filter((t) => t.status === "inbox").length,
+      assigned: tasks.filter((t) => t.status === "assigned").length,
       inProgress: tasks.filter((t) => t.status === "in_progress").length,
-      completed: tasks.filter((t) => t.status === "completed").length,
-      failed: tasks.filter((t) => t.status === "failed").length,
+      review: tasks.filter((t) => t.status === "review").length,
+      done: tasks.filter((t) => t.status === "done").length,
     };
   },
 });
@@ -81,7 +83,7 @@ export const create = mutation({
   handler: async (ctx, args) => {
     return await ctx.db.insert("tasks", {
       ...args,
-      status: "queued",
+      status: "inbox",
       createdAt: Date.now(),
     });
   },
@@ -92,10 +94,11 @@ export const updateStatus = mutation({
   args: {
     id: v.id("tasks"),
     status: v.union(
-      v.literal("queued"),
+      v.literal("inbox"),
+      v.literal("assigned"),
       v.literal("in_progress"),
-      v.literal("completed"),
-      v.literal("failed")
+      v.literal("review"),
+      v.literal("done")
     ),
     result: v.optional(v.string()),
   },
@@ -104,18 +107,15 @@ export const updateStatus = mutation({
 
     if (args.status === "in_progress") {
       updates.startedAt = Date.now();
-    } else if (
-      args.status === "completed" ||
-      args.status === "failed"
-    ) {
+    } else if (args.status === "done") {
       updates.completedAt = Date.now();
       if (args.result) updates.result = args.result;
     }
 
     await ctx.db.patch(args.id, updates);
 
-    // If completed, increment agent's task counter
-    if (args.status === "completed") {
+    // If done, increment agent's task counter
+    if (args.status === "done") {
       const task = await ctx.db.get(args.id);
       if (task?.assignedTo) {
         const agent = await ctx.db.get(task.assignedTo);

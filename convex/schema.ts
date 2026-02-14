@@ -15,6 +15,11 @@ export default defineSchema({
   agents: defineTable({
     name: v.string(),
     role: v.string(),
+    agentType: v.optional(v.union(
+      v.literal("coordinator"),
+      v.literal("developer"),
+      v.literal("qa")
+    )),
     sessionKey: v.string(),
     model: v.string(),
     status: v.union(
@@ -39,10 +44,11 @@ export default defineSchema({
     title: v.string(),
     description: v.optional(v.string()),
     status: v.union(
-      v.literal("queued"),
+      v.literal("inbox"),
+      v.literal("assigned"),
       v.literal("in_progress"),
-      v.literal("completed"),
-      v.literal("failed")
+      v.literal("review"),
+      v.literal("done")
     ),
     priority: v.union(
       v.literal("low"),

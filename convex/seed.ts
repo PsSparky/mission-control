@@ -21,6 +21,7 @@ export const seedAgents = mutation({
     const sparkyId = await ctx.db.insert("agents", {
       name: "Sparky (Tyrion)",
       role: "Coordinator — delegates tasks, reports results",
+      agentType: "coordinator",
       sessionKey: "agent:main:main",
       model: "claude-opus-4",
       emoji: "⚡",
@@ -35,6 +36,7 @@ export const seedAgents = mutation({
     const jonId = await ctx.db.insert("agents", {
       name: "Jon Snow",
       role: "Developer — writes articles, runs pipeline, fixes code",
+      agentType: "developer",
       sessionKey: "agent:jon-snow:main",
       model: "claude-opus-4",
       emoji: "⚔️",
@@ -48,6 +50,7 @@ export const seedAgents = mutation({
     const brienneId = await ctx.db.insert("agents", {
       name: "Brienne",
       role: "QA Reviewer — reviews in Notion, fixes articles, reports issues",
+      agentType: "qa",
       sessionKey: "agent:brienne:main",
       model: "claude-sonnet-4-5",
       emoji: "🛡️",

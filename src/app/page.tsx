@@ -11,7 +11,7 @@ export default function Home() {
   // Fetch all data
   const agents = useQuery(api.agents.list, {}) ?? [];
   const tasks = useQuery(api.tasks.list, {}) ?? [];
-  const activities = useQuery(api.activities.recent, { limit: 50 }) ?? [];
+  const activities = useQuery(api.activities.list, { limit: 50 }) ?? [];
 
   // Calculate metrics
   const agentsActive = agents.filter(

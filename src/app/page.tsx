@@ -106,8 +106,8 @@ export default function Home() {
 
       {/* === MOBILE: Tab-based Layout (hidden on desktop) === */}
       <div className="flex flex-col flex-1 overflow-hidden md:hidden">
-        {/* Content area */}
-        <div className="flex-1 overflow-y-auto">
+        {/* Content area with padding for bottom nav */}
+        <div className="flex-1 overflow-y-auto pb-16">
           {mobileTab === "agents" && (
             <div className="bg-zinc-900 min-h-full">
               {selectedAgentId ? (
@@ -142,8 +142,8 @@ export default function Home() {
           )}
         </div>
 
-        {/* Bottom Tab Bar */}
-        <nav className="flex items-center bg-zinc-900 border-t border-zinc-800 px-2 py-2 flex-shrink-0">
+        {/* Bottom Tab Bar - Fixed at bottom */}
+        <nav className="fixed bottom-0 left-0 right-0 md:hidden flex items-center bg-zinc-900 border-t border-zinc-800 px-2 py-2 z-50">
           {MOBILE_TABS.map((tab) => {
             const isActive = mobileTab === tab.id;
             const Icon = tab.icon;

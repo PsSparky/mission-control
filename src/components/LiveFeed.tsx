@@ -9,6 +9,7 @@ interface Activity {
   action: string;
   description: string;
   timestamp: number;
+  taskId?: Id<"tasks">;
 }
 
 interface Agent {
@@ -18,15 +19,21 @@ interface Agent {
 }
 
 const FEED_TABS = [
-  { id: "all", name: "All" },
-  { id: "tasks", name: "Tasks" },
-  { id: "comments", name: "Comments" },
-  { id: "decisions", name: "Decisions" },
-  { id: "docs", name: "Docs" },
-  { id: "status", name: "Status" },
+  { id: "all", name: "All", actions: [] },
+  { id: "tasks", name: "Tasks", actions: ["started", "completed", "assigned"] },
+  { id: "comments", name: "Comments", actions: ["commented"] },
+  { id: "decisions", name: "Decisions", actions: ["decided"] },
+  { id: "status", name: "Status", actions: ["spawned", "heartbeat", "status_update"] },
+  { id: "docs", name: "Docs", actions: ["documented"] },
 ] as const;
 
-export function LiveFeed({ activities, agents }: { activities: Activity[]; agents: Agent[] }) {
+interface LiveFeedProps {
+  activities: Activity[];
+  agents: Agent[];
+  onTaskClick?: (taskId: Id<"tasks">) => void;
+}
+
+export function LiveFeed({ activities, agents, onTaskClick }: LiveFeedProps) {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
 
@@ -68,9 +75,21 @@ export function LiveFeed({ activities, agents }: { activities: Activity[]; agent
   };
 
   const agentCounts = getAgentCounts();
-  const filteredActivities = selectedAgent
-    ? activities.filter((a) => a.agentName === selectedAgent)
-    : activities;
+  
+  // Filter by tab (action type)
+  let filteredActivities = activities;
+  const currentTab = FEED_TABS.find((t) => t.id === activeTab);
+  if (currentTab && currentTab.actions.length > 0) {
+    const allowedActions = currentTab.actions as readonly string[];
+    filteredActivities = filteredActivities.filter((a) => 
+      (allowedActions as string[]).includes(a.action)
+    );
+  }
+  
+  // Filter by agent
+  if (selectedAgent) {
+    filteredActivities = filteredActivities.filter((a) => a.agentName === selectedAgent);
+  }
 
   return (
     <aside className="w-80 bg-zinc-900 border-l border-zinc-800 overflow-y-auto">
@@ -99,7 +118,6 @@ export function LiveFeed({ activities, agents }: { activities: Activity[]; agent
                 }`}
               >
                 {tab.name}
-                <span className="ml-1.5 text-zinc-600">{activities.length}</span>
               </button>
             );
           })}
@@ -147,7 +165,13 @@ export function LiveFeed({ activities, agents }: { activities: Activity[]; agent
             </div>
           ) : (
             filteredActivities.map((activity) => (
-              <div key={activity._id} className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg p-3">
+              <div 
+                key={activity._id} 
+                className={`bg-zinc-800/50 border border-zinc-700/50 rounded-lg p-3 ${
+                  activity.taskId ? "cursor-pointer hover:border-zinc-600 transition-colors" : ""
+                }`}
+                onClick={() => activity.taskId && onTaskClick?.(activity.taskId)}
+              >
                 <div className="flex items-start gap-2">
                   <div className={`w-2 h-2 ${getActionColor(activity.action)} rounded-full mt-1.5 flex-shrink-0`} />
                   <div className="flex-1 min-w-0">

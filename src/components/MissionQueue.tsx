@@ -24,7 +24,12 @@ const COLUMNS = [
   { id: "done", name: "DONE", color: "bg-emerald-500" },
 ] as const;
 
-export function MissionQueue({ tasks }: { tasks: Task[] }) {
+interface MissionQueueProps {
+  tasks: Task[];
+  onTaskClick?: (taskId: Id<"tasks">) => void;
+}
+
+export function MissionQueue({ tasks, onTaskClick }: MissionQueueProps) {
   const getTasksByStatus = (status: string) => {
     return tasks.filter((t) => t.status === status);
   };
@@ -80,7 +85,7 @@ export function MissionQueue({ tasks }: { tasks: Task[] }) {
                       <p className="text-xs text-zinc-600">No tasks</p>
                     </div>
                   ) : (
-                    columnTasks.map((task) => <TaskCard key={task._id} task={task} />)
+                    columnTasks.map((task) => <TaskCard key={task._id} task={task} onClick={onTaskClick} />)
                   )}
                 </div>
               </div>

@@ -59,7 +59,10 @@ export function Header({ agentsActive, tasksInQueue }: { agentsActive: number; t
 
         {/* Right: Docs + Clock + Status */}
         <div className="flex items-center gap-4">
-          <button className="px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-white border border-zinc-700 hover:border-zinc-600 rounded-lg transition-colors">
+          <button 
+            onClick={() => window.open("https://docs.openclaw.ai", "_blank")}
+            className="px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-white border border-zinc-700 hover:border-zinc-600 rounded-lg transition-colors"
+          >
             Docs
           </button>
           <div className="text-right">

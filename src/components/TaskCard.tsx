@@ -15,7 +15,12 @@ interface Task {
   tags?: string[];
 }
 
-export function TaskCard({ task }: { task: Task }) {
+interface TaskCardProps {
+  task: Task;
+  onClick?: (taskId: Id<"tasks">) => void;
+}
+
+export function TaskCard({ task, onClick }: TaskCardProps) {
   const getPriorityIndicator = () => {
     if (task.priority === "high" || task.priority === "urgent") {
       return <ArrowUpRight className="w-4 h-4 text-red-400" />;
@@ -35,16 +40,19 @@ export function TaskCard({ task }: { task: Task }) {
   };
 
   return (
-    <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-3 hover:border-zinc-600 transition-colors group">
+    <div 
+      className="bg-zinc-800 border border-zinc-700 rounded-lg p-3 hover:border-zinc-600 transition-colors group cursor-pointer"
+      onClick={() => onClick?.(task._id)}
+    >
       {/* Header with Priority */}
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-start gap-2 flex-1">
           {getPriorityIndicator()}
           <h4 className="text-sm font-bold text-white leading-snug flex-1">{task.title}</h4>
         </div>
-        <button className="opacity-0 group-hover:opacity-100 transition-opacity">
-          <ArrowRight className="w-4 h-4 text-zinc-500 hover:text-zinc-300" />
-        </button>
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+          <ArrowRight className="w-4 h-4 text-zinc-500" />
+        </div>
       </div>
 
       {/* Description */}

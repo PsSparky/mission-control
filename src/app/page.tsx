@@ -1,13 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import { Header } from "@/components/Header";
 import { AgentSidebar } from "@/components/AgentSidebar";
+import { AgentDetailPanel } from "@/components/AgentDetailPanel";
 import { MissionQueue } from "@/components/MissionQueue";
 import { LiveFeed } from "@/components/LiveFeed";
+import { TaskDetailPanel } from "@/components/TaskDetailPanel";
 
 export default function Home() {
+  // State for selected items
+  const [selectedTaskId, setSelectedTaskId] = useState<Id<"tasks"> | null>(null);
+  const [selectedAgentId, setSelectedAgentId] = useState<Id<"agents"> | null>(null);
+
   // Fetch all data
   const agents = useQuery(api.agents.list, {}) ?? [];
   const tasks = useQuery(api.tasks.list, {}) ?? [];
@@ -32,6 +40,23 @@ export default function Home() {
     };
   });
 
+  // Handlers
+  const handleTaskClick = (taskId: Id<"tasks">) => {
+    setSelectedTaskId(taskId);
+  };
+
+  const handleAgentClick = (agentId: Id<"agents">) => {
+    setSelectedAgentId(agentId);
+  };
+
+  const handleCloseTaskDetail = () => {
+    setSelectedTaskId(null);
+  };
+
+  const handleBackToAgentList = () => {
+    setSelectedAgentId(null);
+  };
+
   return (
     <div className="flex flex-col h-screen bg-zinc-950">
       {/* Top Header */}
@@ -39,15 +64,42 @@ export default function Home() {
 
       {/* Main 3-Column Layout */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left: Agents Sidebar */}
-        <AgentSidebar agents={agents} />
+        {/* Left: Agents Sidebar (or Agent Detail) */}
+        <aside className="w-64 bg-zinc-900 border-r border-zinc-800 overflow-y-auto">
+          {selectedAgentId ? (
+            <AgentDetailPanel 
+              agentId={selectedAgentId} 
+              onBack={handleBackToAgentList} 
+            />
+          ) : (
+            <AgentSidebar 
+              agents={agents} 
+              onAgentClick={handleAgentClick} 
+            />
+          )}
+        </aside>
 
         {/* Center: Mission Queue */}
-        <MissionQueue tasks={enrichedTasks} />
+        <MissionQueue 
+          tasks={enrichedTasks} 
+          onTaskClick={handleTaskClick} 
+        />
 
         {/* Right: Live Feed */}
-        <LiveFeed activities={activities} agents={agents} />
+        <LiveFeed 
+          activities={activities} 
+          agents={agents} 
+          onTaskClick={handleTaskClick}
+        />
       </div>
+
+      {/* Task Detail Slide-Over Panel */}
+      {selectedTaskId && (
+        <TaskDetailPanel 
+          taskId={selectedTaskId} 
+          onClose={handleCloseTaskDetail} 
+        />
+      )}
     </div>
   );
 }

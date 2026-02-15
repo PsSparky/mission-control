@@ -13,7 +13,12 @@ interface Agent {
   lastHeartbeat?: number;
 }
 
-export function AgentSidebar({ agents }: { agents: Agent[] }) {
+interface AgentSidebarProps {
+  agents: Agent[];
+  onAgentClick?: (agentId: Id<"agents">) => void;
+}
+
+export function AgentSidebar({ agents, onAgentClick }: AgentSidebarProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "working":
@@ -81,7 +86,11 @@ export function AgentSidebar({ agents }: { agents: Agent[] }) {
           {agents.map((agent) => {
             const badge = getRoleBadge(agent.agentType || "developer");
             return (
-              <div key={agent._id} className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg p-3">
+              <div 
+                key={agent._id} 
+                className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg p-3 cursor-pointer hover:border-zinc-600 transition-colors"
+                onClick={() => onAgentClick?.(agent._id)}
+              >
                 {/* Agent Header */}
                 <div className="flex items-start gap-3 mb-2">
                   <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center text-sm flex-shrink-0">

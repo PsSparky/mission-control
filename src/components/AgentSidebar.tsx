@@ -16,9 +16,10 @@ interface Agent {
 interface AgentSidebarProps {
   agents: Agent[];
   onAgentClick?: (agentId: Id<"agents">) => void;
+  mobile?: boolean;
 }
 
-export function AgentSidebar({ agents, onAgentClick }: AgentSidebarProps) {
+export function AgentSidebar({ agents, onAgentClick, mobile }: AgentSidebarProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "working":
@@ -70,73 +71,72 @@ export function AgentSidebar({ agents, onAgentClick }: AgentSidebarProps) {
     return `${days}d ago`;
   };
 
+  // On mobile, we render without the aside wrapper (parent handles it)
   return (
-    <aside className="w-64 bg-zinc-900 border-r border-zinc-800 overflow-y-auto">
-      <div className="p-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wide">Agents</h2>
-          <div className="px-2 py-0.5 bg-zinc-800 rounded-full text-xs font-semibold text-zinc-400">
-            {agents.length}
-          </div>
-        </div>
-
-        {/* Agent List */}
-        <div className="space-y-3">
-          {agents.map((agent) => {
-            const badge = getRoleBadge(agent.agentType || "developer");
-            return (
-              <div 
-                key={agent._id} 
-                className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg p-3 cursor-pointer hover:border-zinc-600 transition-colors"
-                onClick={() => onAgentClick?.(agent._id)}
-              >
-                {/* Agent Header */}
-                <div className="flex items-start gap-3 mb-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center text-sm flex-shrink-0">
-                    {agent.emoji || "🤖"}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-sm font-bold text-white truncate">{agent.name}</h3>
-                      <span className={`px-1.5 py-0.5 text-[10px] font-bold border rounded ${badge.color}`}>
-                        {badge.label}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className={`w-1.5 h-1.5 rounded-full ${getStatusDot(agent.status)}`} />
-                      <span className={`text-xs font-semibold uppercase ${getStatusColor(agent.status)}`}>
-                        {agent.status}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Role Description */}
-                <p className="text-xs text-zinc-500 mb-2 leading-relaxed">
-                  {agent.role}
-                </p>
-
-                {/* Current Task */}
-                {agent.currentTask && (
-                  <div className="mt-2 pt-2 border-t border-zinc-700/50">
-                    <p className="text-xs text-zinc-400 line-clamp-2">
-                      {agent.currentTask}
-                    </p>
-                  </div>
-                )}
-
-                {/* Time Ago */}
-                {agent.lastHeartbeat && (
-                  <div className="mt-2 text-[10px] text-zinc-600">
-                    {getTimeAgo(agent.lastHeartbeat)}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+    <div className={mobile ? "p-4" : "p-4"}>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wide">Agents</h2>
+        <div className="px-2 py-0.5 bg-zinc-800 rounded-full text-xs font-semibold text-zinc-400">
+          {agents.length}
         </div>
       </div>
-    </aside>
+
+      {/* Agent List — grid on mobile, stack on desktop */}
+      <div className={mobile ? "grid grid-cols-1 gap-3" : "space-y-3"}>
+        {agents.map((agent) => {
+          const badge = getRoleBadge(agent.agentType || "developer");
+          return (
+            <div 
+              key={agent._id} 
+              className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg p-3 cursor-pointer hover:border-zinc-600 transition-colors"
+              onClick={() => onAgentClick?.(agent._id)}
+            >
+              {/* Agent Header */}
+              <div className="flex items-start gap-3 mb-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center text-sm flex-shrink-0">
+                  {agent.emoji || "🤖"}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-sm font-bold text-white truncate">{agent.name}</h3>
+                    <span className={`px-1.5 py-0.5 text-[10px] font-bold border rounded ${badge.color}`}>
+                      {badge.label}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className={`w-1.5 h-1.5 rounded-full ${getStatusDot(agent.status)}`} />
+                    <span className={`text-xs font-semibold uppercase ${getStatusColor(agent.status)}`}>
+                      {agent.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Role Description */}
+              <p className="text-xs text-zinc-500 mb-2 leading-relaxed">
+                {agent.role}
+              </p>
+
+              {/* Current Task */}
+              {agent.currentTask && (
+                <div className="mt-2 pt-2 border-t border-zinc-700/50">
+                  <p className="text-xs text-zinc-400 line-clamp-2">
+                    {agent.currentTask}
+                  </p>
+                </div>
+              )}
+
+              {/* Time Ago */}
+              {agent.lastHeartbeat && (
+                <div className="mt-2 text-[10px] text-zinc-600">
+                  {getTimeAgo(agent.lastHeartbeat)}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

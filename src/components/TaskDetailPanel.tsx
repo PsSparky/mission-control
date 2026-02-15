@@ -69,7 +69,7 @@ export function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProps) {
       />
 
       {/* Slide-over Panel */}
-      <div className="fixed right-0 top-0 bottom-0 w-[480px] bg-zinc-900 border-l border-zinc-800 shadow-2xl z-50 overflow-y-auto">
+      <div className="fixed inset-0 md:inset-auto md:right-0 md:top-0 md:bottom-0 md:w-[480px] bg-zinc-900 md:border-l border-zinc-800 shadow-2xl z-50 overflow-y-auto">
         <div className="p-6">
           {/* Header */}
           <div className="flex items-start justify-between mb-6">

@@ -8,6 +8,7 @@ import { Id } from "../../convex/_generated/dataModel";
 interface AgentDetailPanelProps {
   agentId: Id<"agents">;
   onBack: () => void;
+  onTaskClick?: (taskId: Id<"tasks">) => void;
 }
 
 const STATUS_COLORS = {
@@ -24,7 +25,7 @@ const ROLE_BADGES = {
   qa: { label: "QA", color: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
 };
 
-export function AgentDetailPanel({ agentId, onBack }: AgentDetailPanelProps) {
+export function AgentDetailPanel({ agentId, onBack, onTaskClick }: AgentDetailPanelProps) {
   const agent = useQuery(api.agents.get, { id: agentId });
   const tasks = useQuery(api.tasks.list, { assignedTo: agentId }) ?? [];
   const activities = useQuery(api.activities.list, { agentId, limit: 20 }) ?? [];
@@ -153,7 +154,8 @@ export function AgentDetailPanel({ agentId, onBack }: AgentDetailPanelProps) {
             tasks.map((task) => (
               <div
                 key={task._id}
-                className="p-3 bg-zinc-800 border border-zinc-700 rounded-lg hover:border-zinc-600 transition-colors"
+                className="p-3 bg-zinc-800 border border-zinc-700 rounded-lg hover:border-zinc-600 transition-colors cursor-pointer"
+                onClick={() => onTaskClick?.(task._id)}
               >
                 <div className="text-sm font-bold text-white mb-1">{task.title}</div>
                 <div className="flex items-center gap-2">

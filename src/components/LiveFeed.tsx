@@ -31,9 +31,10 @@ interface LiveFeedProps {
   activities: Activity[];
   agents: Agent[];
   onTaskClick?: (taskId: Id<"tasks">) => void;
+  mobile?: boolean;
 }
 
-export function LiveFeed({ activities, agents, onTaskClick }: LiveFeedProps) {
+export function LiveFeed({ activities, agents, onTaskClick, mobile }: LiveFeedProps) {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
 
@@ -91,8 +92,14 @@ export function LiveFeed({ activities, agents, onTaskClick }: LiveFeedProps) {
     filteredActivities = filteredActivities.filter((a) => a.agentName === selectedAgent);
   }
 
+  // On mobile, render as full-width content
+  const Wrapper = mobile ? "div" : "aside";
+  const wrapperClass = mobile
+    ? "bg-zinc-900 min-h-full"
+    : "w-80 bg-zinc-900 border-l border-zinc-800 overflow-y-auto flex-shrink-0";
+
   return (
-    <aside className="w-80 bg-zinc-900 border-l border-zinc-800 overflow-y-auto">
+    <Wrapper className={wrapperClass}>
       <div className="p-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
@@ -187,6 +194,6 @@ export function LiveFeed({ activities, agents, onTaskClick }: LiveFeedProps) {
           )}
         </div>
       </div>
-    </aside>
+    </Wrapper>
   );
 }

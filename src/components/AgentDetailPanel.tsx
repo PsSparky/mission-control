@@ -4,7 +4,7 @@ import { ArrowLeft, Clock, FileText, ChevronDown, ChevronRight } from "lucide-re
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface AgentDetailPanelProps {
   agentId: Id<"agents">;
@@ -26,23 +26,15 @@ const ROLE_BADGES = {
   qa: { label: "QA", color: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
 };
 
-// Map Convex session key → API query param
-function getAgentParam(sessionKey?: string): string | null {
-  if (!sessionKey) return null;
-  if (sessionKey === "agent:main:main") return "sparky";
-  if (sessionKey === "agent:jon-snow:main") return "jon";
-  if (sessionKey === "agent:brienne:main") return "brienne";
-  return null;
-}
-
-interface AgentFile {
-  name: string;
-  path: string;
+interface ConvexAgentFile {
+  _id: string;
+  agentSessionKey: string;
+  fileName: string;
   content: string;
-  exists: boolean;
+  updatedAt: number;
 }
 
-function FileCard({ file }: { file: AgentFile }) {
+function FileCard({ file }: { file: ConvexAgentFile }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -53,7 +45,7 @@ function FileCard({ file }: { file: AgentFile }) {
       >
         <div className="flex items-center gap-2">
           <FileText className="w-4 h-4 text-violet-400 flex-shrink-0" />
-          <span className="text-sm font-mono font-semibold text-violet-300">{file.name}</span>
+          <span className="text-sm font-mono font-semibold text-violet-300">{file.fileName}</span>
         </div>
         {expanded ? (
           <ChevronDown className="w-4 h-4 text-zinc-500 flex-shrink-0" />
@@ -73,42 +65,20 @@ function FileCard({ file }: { file: AgentFile }) {
 }
 
 function FilesTab({ sessionKey }: { sessionKey?: string }) {
-  const agentParam = getAgentParam(sessionKey);
-  const [files, setFiles] = useState<AgentFile[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const files = useQuery(
+    api.agentFiles.listForAgent,
+    sessionKey ? { agentSessionKey: sessionKey } : "skip"
+  ) ?? [];
 
-  useEffect(() => {
-    if (!agentParam) {
-      setError("Unknown agent — cannot map to file system.");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    fetch(`/api/agent-files?agent=${agentParam}`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
-        setFiles(data.files ?? []);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message ?? "Failed to load files");
-        setLoading(false);
-      });
-  }, [agentParam]);
-
-  if (!agentParam) {
+  if (!sessionKey) {
     return (
       <div className="p-4 bg-zinc-800/30 border border-dashed border-zinc-700 rounded-lg text-center">
-        <p className="text-xs text-zinc-600">No file mapping for this agent</p>
+        <p className="text-xs text-zinc-600">No session key for this agent</p>
       </div>
     );
   }
 
-  if (loading) {
+  if (files === undefined) {
     return (
       <div className="p-4 text-center">
         <p className="text-xs text-zinc-500 animate-pulse">Loading files…</p>
@@ -116,18 +86,10 @@ function FilesTab({ sessionKey }: { sessionKey?: string }) {
     );
   }
 
-  if (error) {
-    return (
-      <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-        <p className="text-xs text-red-400">Error: {error}</p>
-      </div>
-    );
-  }
-
   if (files.length === 0) {
     return (
       <div className="p-4 bg-zinc-800/30 border border-dashed border-zinc-700 rounded-lg text-center">
-        <p className="text-xs text-zinc-600">No files found</p>
+        <p className="text-xs text-zinc-600">No files synced yet</p>
       </div>
     );
   }
@@ -135,7 +97,7 @@ function FilesTab({ sessionKey }: { sessionKey?: string }) {
   return (
     <div className="space-y-2">
       {files.map((file) => (
-        <FileCard key={file.path} file={file} />
+        <FileCard key={file._id} file={file as ConvexAgentFile} />
       ))}
     </div>
   );

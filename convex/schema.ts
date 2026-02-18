@@ -97,6 +97,16 @@ export default defineSchema({
     .index("by_thread", ["threadId"])
     .index("by_timestamp", ["timestamp"]),
 
+  // Agent workspace files — synced from local filesystem for Vercel access
+  agentFiles: defineTable({
+    agentSessionKey: v.string(),   // e.g. "agent:main:main"
+    fileName: v.string(),          // e.g. "MEMORY.md"
+    content: v.string(),
+    updatedAt: v.number(),
+  })
+    .index("by_agent", ["agentSessionKey"])
+    .index("by_agent_file", ["agentSessionKey", "fileName"]),
+
   // Notifications — important events surfaced to the user
   notifications: defineTable({
     title: v.string(),

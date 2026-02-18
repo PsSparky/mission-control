@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowLeft, User, Clock } from "lucide-react";
+import { ArrowLeft, Clock, FileText, ChevronDown, ChevronRight } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
+import { useState, useEffect } from "react";
 
 interface AgentDetailPanelProps {
   agentId: Id<"agents">;
@@ -25,10 +26,128 @@ const ROLE_BADGES = {
   qa: { label: "QA", color: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
 };
 
+// Map Convex session key → API query param
+function getAgentParam(sessionKey?: string): string | null {
+  if (!sessionKey) return null;
+  if (sessionKey === "agent:main:main") return "sparky";
+  if (sessionKey === "agent:jon-snow:main") return "jon";
+  if (sessionKey === "agent:brienne:main") return "brienne";
+  return null;
+}
+
+interface AgentFile {
+  name: string;
+  path: string;
+  content: string;
+  exists: boolean;
+}
+
+function FileCard({ file }: { file: AgentFile }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="border border-zinc-700 rounded-lg overflow-hidden">
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-zinc-800 hover:bg-zinc-750 transition-colors text-left"
+      >
+        <div className="flex items-center gap-2">
+          <FileText className="w-4 h-4 text-violet-400 flex-shrink-0" />
+          <span className="text-sm font-mono font-semibold text-violet-300">{file.name}</span>
+        </div>
+        {expanded ? (
+          <ChevronDown className="w-4 h-4 text-zinc-500 flex-shrink-0" />
+        ) : (
+          <ChevronRight className="w-4 h-4 text-zinc-500 flex-shrink-0" />
+        )}
+      </button>
+      {expanded && (
+        <div className="bg-zinc-900 border-t border-zinc-700">
+          <pre className="p-4 text-xs text-zinc-300 font-mono leading-relaxed overflow-x-auto whitespace-pre-wrap break-words max-h-96 overflow-y-auto">
+            {file.content}
+          </pre>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FilesTab({ sessionKey }: { sessionKey?: string }) {
+  const agentParam = getAgentParam(sessionKey);
+  const [files, setFiles] = useState<AgentFile[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!agentParam) {
+      setError("Unknown agent — cannot map to file system.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    fetch(`/api/agent-files?agent=${agentParam}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        setFiles(data.files ?? []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message ?? "Failed to load files");
+        setLoading(false);
+      });
+  }, [agentParam]);
+
+  if (!agentParam) {
+    return (
+      <div className="p-4 bg-zinc-800/30 border border-dashed border-zinc-700 rounded-lg text-center">
+        <p className="text-xs text-zinc-600">No file mapping for this agent</p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="p-4 text-center">
+        <p className="text-xs text-zinc-500 animate-pulse">Loading files…</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+        <p className="text-xs text-red-400">Error: {error}</p>
+      </div>
+    );
+  }
+
+  if (files.length === 0) {
+    return (
+      <div className="p-4 bg-zinc-800/30 border border-dashed border-zinc-700 rounded-lg text-center">
+        <p className="text-xs text-zinc-600">No files found</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {files.map((file) => (
+        <FileCard key={file.path} file={file} />
+      ))}
+    </div>
+  );
+}
+
+type Tab = "tasks" | "activity" | "files";
+
 export function AgentDetailPanel({ agentId, onBack, onTaskClick }: AgentDetailPanelProps) {
   const agent = useQuery(api.agents.get, { id: agentId });
   const tasks = useQuery(api.tasks.list, { assignedTo: agentId }) ?? [];
   const activities = useQuery(api.activities.list, { agentId, limit: 20 }) ?? [];
+  const [activeTab, setActiveTab] = useState<Tab>("tasks");
 
   if (!agent) {
     return (
@@ -75,6 +194,12 @@ export function AgentDetailPanel({ agentId, onBack, onTaskClick }: AgentDetailPa
         return "bg-zinc-500";
     }
   };
+
+  const tabs: { id: Tab; label: string }[] = [
+    { id: "tasks", label: "Tasks" },
+    { id: "activity", label: "Activity" },
+    { id: "files", label: "Files" },
+  ];
 
   return (
     <div className="p-4 h-full overflow-y-auto">
@@ -135,16 +260,25 @@ export function AgentDetailPanel({ agentId, onBack, onTaskClick }: AgentDetailPa
         )}
       </div>
 
-      {/* Assigned Tasks */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wide">
-            Assigned Tasks
-          </h3>
-          <span className="px-2 py-0.5 bg-zinc-800 rounded-full text-xs font-semibold text-zinc-500">
-            {tasks.length}
-          </span>
-        </div>
+      {/* Tabs */}
+      <div className="flex gap-1 mb-4 bg-zinc-800/50 p-1 rounded-lg border border-zinc-700">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+              activeTab === tab.id
+                ? "bg-violet-600 text-white"
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === "tasks" && (
         <div className="space-y-2">
           {tasks.length === 0 ? (
             <div className="p-4 bg-zinc-800/30 border border-dashed border-zinc-700 rounded-lg text-center">
@@ -167,19 +301,9 @@ export function AgentDetailPanel({ agentId, onBack, onTaskClick }: AgentDetailPa
             ))
           )}
         </div>
-      </div>
+      )}
 
-      {/* Recent Activity */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wide flex items-center gap-2">
-            <Clock className="w-3 h-3" />
-            Recent Activity
-          </h3>
-          <span className="px-2 py-0.5 bg-zinc-800 rounded-full text-xs font-semibold text-zinc-500">
-            {activities.length}
-          </span>
-        </div>
+      {activeTab === "activity" && (
         <div className="space-y-2">
           {activities.length === 0 ? (
             <div className="p-4 bg-zinc-800/30 border border-dashed border-zinc-700 rounded-lg text-center">
@@ -206,7 +330,11 @@ export function AgentDetailPanel({ agentId, onBack, onTaskClick }: AgentDetailPa
             ))
           )}
         </div>
-      </div>
+      )}
+
+      {activeTab === "files" && (
+        <FilesTab sessionKey={agent.sessionKey} />
+      )}
     </div>
   );
 }

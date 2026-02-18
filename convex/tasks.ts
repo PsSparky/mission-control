@@ -140,6 +140,27 @@ export const assign = mutation({
   },
 });
 
+// Add a note to a task's progress log
+export const addNote = mutation({
+  args: {
+    id: v.id("tasks"),
+    agentName: v.string(),
+    note: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const task = await ctx.db.get(args.id);
+    if (!task) throw new Error("Task not found");
+    const existing = task.progressLog ?? [];
+    await ctx.db.patch(args.id, {
+      progressLog: [...existing, {
+        agentName: args.agentName,
+        note: args.note,
+        timestamp: Date.now(),
+      }],
+    });
+  },
+});
+
 // Delete a task
 export const remove = mutation({
   args: { id: v.id("tasks") },

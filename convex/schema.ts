@@ -64,6 +64,11 @@ export default defineSchema({
     completedAt: v.optional(v.number()),
     result: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
+    progressLog: v.optional(v.array(v.object({
+      agentName: v.string(),
+      note: v.string(),
+      timestamp: v.number(),
+    }))),
   })
     .index("by_status", ["status"])
     .index("by_agent", ["assignedTo"])

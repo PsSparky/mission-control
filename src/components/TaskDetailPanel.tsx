@@ -1,9 +1,22 @@
 "use client";
 
-import { X, Clock, Calendar, User, Tag, CheckCircle, Circle } from "lucide-react";
+import { X, Clock, Calendar, User, Tag, CheckCircle, Circle, ScrollText } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
+
+interface ProgressEntry {
+  agentName: string;
+  note: string;
+  timestamp: number;
+}
+
+function getAgentStyle(agentName: string): { emoji: string; colorClass: string } {
+  if (agentName === "Jon Snow") return { emoji: "⚔️", colorClass: "text-blue-400" };
+  if (agentName === "Brienne") return { emoji: "🛡️", colorClass: "text-amber-400" };
+  if (agentName === "Sparky (Tyrion)") return { emoji: "⚡", colorClass: "text-violet-400" };
+  return { emoji: "🤖", colorClass: "text-zinc-400" };
+}
 
 interface TaskDetailPanelProps {
   taskId: Id<"tasks">;
@@ -249,6 +262,44 @@ export function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProps) {
               })}
             </div>
           </div>
+
+          {/* Progress Log */}
+          {task.progressLog && task.progressLog.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wide mb-3 flex items-center gap-2">
+                <ScrollText className="w-3 h-3" />
+                Progress Log
+              </h3>
+              <div className="space-y-3">
+                {(task.progressLog as ProgressEntry[]).map((entry, idx) => {
+                  const { emoji, colorClass } = getAgentStyle(entry.agentName);
+                  return (
+                    <div
+                      key={idx}
+                      className="p-3 bg-zinc-800/50 border border-zinc-700 rounded-lg"
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className={`text-sm font-bold ${colorClass}`}>
+                          {emoji} {entry.agentName}
+                        </span>
+                        <span className="text-xs text-zinc-500">
+                          {new Date(entry.timestamp).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                        {entry.note}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Result */}
           {task.result && (
